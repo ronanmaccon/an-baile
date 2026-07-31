@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ga">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>An Baile</title>
+<meta name="theme-color" content="#FAF8F4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="An Baile">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FAF8F4;
+    --ink: #1D2724;
+    --green: #0E4D43;
+    --green-soft: #E2ECE9;
+    --ronan: #E4602A;
+    --ronan-text: #C24E16;
+    --ronan-soft: #FBE7DD;
+    --mairin: #6D4B8C;
+    --mairin-text: #5E3F7E;
+    --mairin-soft: #EDE6F4;
+    --red: #A32E1E;
+    --line: #E6E2D8;
+    --muted: #71786F;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    padding-bottom: calc(74px + env(safe-area-inset-bottom));
+  }
+  .display { font-family: "Bebas Neue", -apple-system, sans-serif; letter-spacing: .06em; font-weight: 400; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 14px 16px 0; }
+
+  header.top { display: flex; align-items: baseline; justify-content: space-between; padding-top: env(safe-area-inset-top); }
+  header.top h1 { font-size: 2rem; color: var(--green); margin: 4px 0 0; line-height: 1; }
+  .syncdot { font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: 5px; background: none; border: none; font-family: inherit; padding: 0; }
+  .syncdot i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .syncdot.on i { background: var(--green); }
+  .syncdot.err i { background: var(--red); }
+  .dateline { color: var(--muted); font-size: .85rem; margin: 2px 0 10px; }
+  .banner { background: var(--ronan-soft); color: var(--ronan-text); border-radius: 11px; padding: 9px 13px; font-size: .8rem; margin-bottom: 12px; }
+  .hidden { display: none !important; }
+
+  /* counter */
+  .counter {
+    width: 100%; display: flex; justify-content: space-between; align-items: baseline;
+    border: none; border-radius: 13px; padding: 12px 15px; margin-bottom: 6px;
+    font: inherit; font-weight: 700; color: #fff; cursor: pointer; font-size: 1rem;
+  }
+  .counter.cR { background: var(--ronan); }
+  .counter.cM { background: var(--mairin); }
+  .counter small { font-weight: 400; opacity: .9; font-size: .82rem; }
+
+  /* feed */
+  .sechead { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 16px 2px 8px; }
+  .feed { border-left: 2px solid var(--line); margin-left: 10px; padding-left: 15px; }
+  .fitem { position: relative; margin-bottom: 11px; font-size: .92rem; }
+  .fitem::before { content: ""; position: absolute; left: -21px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+  .fitem.fR::before { background: var(--ronan); }
+  .fitem.fM::before { background: var(--mairin); }
+  .fitem .tm { font-size: .72rem; color: var(--muted); }
+  .fitem b { font-weight: 600; }
+  .fitem .undo { color: var(--muted); font-size: .72rem; }
+  .fcard { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-top: 4px; font-size: .88rem; }
+  .fcard.bR { border-left: 3px solid var(--ronan); }
+  .fcard.bM { border-left: 3px solid var(--mairin); }
+  .fcard small { display: block; font-size: .74rem; color: var(--muted); margin-top: 1px; }
+  .claim {
+    display: inline-block; font: inherit; font-size: .74rem; font-weight: 700; color: #fff;
+    border: none; border-radius: 999px; padding: 5px 13px; margin-top: 7px; cursor: pointer;
+  }
+  .claim.oR { background: var(--ronan); }
+  .claim.oM { background: var(--mairin); }
+  .claim.oG { background: var(--green); }
+  .fdin { background: var(--green); color: #fff; border-radius: 12px; padding: 10px 12px; margin-top: 4px; font-size: .88rem; display: flex; align-items: center; gap: 10px; }
+  .fdin .dt { flex: 1; }
+  .fdin small { display: block; font-size: .74rem; color: #CDE0DA; }
+  .fdin .ck { font-size: .62rem; font-weight: 800; border-radius: 999px; padding: 2px 9px; }
+  .ck.kM { background: var(--mairin); } .ck.kR { background: var(--ronan); }
+  .ck.kB { background: rgba(255,255,255,.18); }
+  .dtick {
+    flex: none; width: 26px; height: 26px; border-radius: 9px; border: 2px solid rgba(255,255,255,.55);
+    background: none; color: #fff; font-weight: 700; font-size: .85rem; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dtick.done { background: #fff; color: var(--green); border-color: #fff; }
+  .fempty { color: var(--muted); font-size: .85rem; margin-bottom: 10px; }
+
+  /* rows (seachtain, sheet) */
+  .task {
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    background: #fff; border: 1px solid var(--line); border-radius: 13px;
+    padding: 11px 12px; margin-bottom: 6px; font: inherit; text-align: left; color: var(--ink); cursor: pointer;
+  }
+  .task .box {
+    flex: none; width: 26px; height: 26px; border-radius: 9px; border: 2px solid var(--line);
+    display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: .85rem;
+  }
+  .task.oR .box { border-color: var(--ronan); }
+  .task.oM .box { border-color: var(--mairin); }
+  .task.done .box { background: var(--green); border-color: var(--green); }
+  .task.done .nm { text-decoration: line-through; color: var(--muted); }
+  .task .nm { flex: 1; }
+  .task .nm small { display: block; font-size: .72rem; color: var(--muted); }
+  .chip { flex: none; font-size: .66rem; font-weight: 700; border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; color: var(--muted); white-space: nowrap; }
+  .chip.warn { border-color: var(--ronan); color: var(--ronan-text); }
+  .chip.kR { border-color: var(--ronan); color: var(--ronan-text); }
+  .chip.kM { border-color: var(--mairin); color: var(--mairin-text); }
+  .daysplit { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 15px 2px 7px; }
+  .daysplit.today { color: var(--green); }
+  .offnote { font-size: .78rem; color: var(--muted); margin: 2px 2px 8px; }
+
+  /* domhnach */
+  h2.sec { font-size: 1.25rem; color: var(--green); margin: 22px 0 4px; border-bottom: 2px solid var(--green); padding-bottom: 3px; }
+  .note { font-size: .8rem; color: var(--muted); margin: 6px 0 12px; }
+  .statrow { display: flex; gap: 10px; margin: 10px 0 4px; }
+  .stat { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 13px; text-align: center; }
+  .stat .big { font-family: "Bebas Neue", sans-serif; font-size: 2rem; line-height: 1; }
+  .stat.sR .big { color: var(--ronan-text); }
+  .stat.sM .big { color: var(--mairin-text); }
+  .stat p { margin: 3px 0 0; font-size: .72rem; color: var(--muted); }
+  .wktoggle { display: flex; gap: 6px; margin: 10px 0; }
+  .wktoggle button { flex: 1; font: inherit; font-size: .8rem; font-weight: 700; border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 0; color: var(--muted); background: none; cursor: pointer; }
+  .wktoggle button.on { background: var(--green); border-color: var(--green); color: #fff; }
+  .dinrow { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; margin-bottom: 6px; }
+  .dinrow .dy { flex: none; width: 28px; font-weight: 700; font-size: .74rem; color: var(--muted); }
+  .dinrow input { flex: 1; min-width: 0; border: none; background: none; font: inherit; font-size: .92rem; color: var(--ink); padding: 4px 2px; }
+  .dinrow input:focus { outline: none; border-bottom: 2px solid var(--green); }
+  .cookbtn { flex: none; font: inherit; font-size: .66rem; font-weight: 800; border-radius: 999px; padding: 5px 11px; border: 1.5px solid var(--line); background: none; color: var(--muted); cursor: pointer; min-width: 72px; }
+  .cookbtn.kM { background: var(--mairin); border-color: var(--mairin); color: #fff; }
+  .cookbtn.kR { background: var(--ronan); border-color: var(--ronan); color: #fff; }
+  .temprow { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; }
+  .temprow .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+  .dot.dR { background: var(--ronan); } .dot.dM { background: var(--mairin); }
+  .temprow .nm { flex: 1; font-size: .92rem; }
+  .temprow .nm small { display: block; font-size: .72rem; color: var(--muted); }
+  .editbtn { font: inherit; font-size: .78rem; font-weight: 700; color: var(--green); background: none; border: none; cursor: pointer; padding: 4px; }
+  .addbtn { display: block; width: 100%; padding: 11px; border: 1.5px dashed var(--line); border-radius: 12px; background: none; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; margin-top: 2px; }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .btn { font: inherit; font-weight: 600; font-size: .88rem; padding: 9px 14px; border-radius: 11px; border: 1.5px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn.primary:disabled { opacity: .4; }
+  .btn.danger { background: none; border-color: #E5C4BC; color: var(--red); }
+
+  /* tabs */
+  nav.tabs {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--cream); border-top: 1px solid var(--line);
+    display: flex; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); z-index: 40;
+  }
+  nav.tabs button {
+    flex: 1; background: none; border: none; font-family: "Bebas Neue", sans-serif;
+    letter-spacing: .08em; font-size: 1.05rem; color: var(--muted); padding: 8px 0 4px; cursor: pointer;
+  }
+  nav.tabs button.on { color: var(--green); }
+
+  /* overlays */
+  .overlay { position: fixed; inset: 0; background: rgba(29,39,36,.5); display: flex; align-items: flex-end; justify-content: center; z-index: 60; }
+  .modal, .sheet {
+    background: var(--cream); border-radius: 20px 20px 0 0; padding: 20px 18px calc(22px + env(safe-area-inset-bottom));
+    width: 100%; max-width: 560px; max-height: 86vh; overflow: auto;
+  }
+  .modal h3, .sheet h3 { font-family: "Bebas Neue", sans-serif; letter-spacing: .06em; font-weight: 400; color: var(--green); font-size: 1.5rem; margin: 0 0 10px; }
+  .lbl { display: block; font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin: 14px 0 5px; }
+  .inp { width: 100%; font: inherit; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 11px; background: #fff; color: var(--ink); }
+  .inp:focus { outline: none; border-color: var(--green); }
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg button { font: inherit; font-size: .84rem; font-weight: 600; padding: 8px 13px; border-radius: 11px; border: 1.5px solid var(--line); background: none; color: var(--muted); cursor: pointer; }
+  .seg button.on { background: var(--ink); border-color: var(--ink); color: var(--cream); }
+  .seg button.on.gR { background: var(--ronan); border-color: var(--ronan); }
+  .seg button.on.gM { background: var(--mairin); border-color: var(--mairin); }
+
+  /* first run */
+  .firstrun { text-align: center; padding: 70px 24px; }
+  .firstrun h1 { font-size: 3.2rem; color: var(--green); margin: 0 0 4px; }
+  .firstrun p.q { color: var(--ink); font-size: 1.05rem; margin: 0 0 26px; }
+  .firstrun .pick { display: flex; gap: 14px; justify-content: center; }
+  .firstrun .pick button {
+    font-family: "Bebas Neue", sans-serif; letter-spacing: .06em; font-size: 1.5rem;
+    padding: 22px 12px; border-radius: 16px; border: none; cursor: pointer; color: #fff; flex: 1; max-width: 200px;
+  }
+  .pick .bR { background: var(--ronan); }
+  .pick .bM { background: var(--mairin); }
+  .firstrun p.small { color: var(--muted); font-size: .8rem; margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<div id="firstrun" class="firstrun hidden">
+  <h1 class="display">An Baile</h1>
+  <p class="q">Cé thú fhéin, anyways?</p>
+  <div class="pick">
+    <button class="bR display" onclick="setWho('R')">Rónán</button>
+    <button class="bM display" onclick="setWho('M')">Máirín</button>
+  </div>
+  <p class="small">Roghnaítear uair amháin ar gach fón.<br>Osclaíonn an fón mar an duine sin as sin amach.</p>
+</div>
+
+<div id="app" class="wrap hidden">
+  <header class="top">
+    <h1 class="display">An Baile</h1>
+    <button id="sync" class="syncdot" onclick="retrySync()"><i></i><span id="synctxt">áitiúil</span></button>
+  </header>
+  <div class="dateline" id="dateline"></div>
+  <div id="banner" class="banner hidden">Níl Firebase socraithe fós. Sonraí á sábháil ar an bhfón seo amháin.</div>
+  <main id="view"></main>
+</div>
+
+<nav class="tabs hidden" id="tabs">
+  <button data-tab="baile" class="display on" onclick="go('baile')">An Baile</button>
+  <button data-tab="seachtain" class="display" onclick="go('seachtain')">Seachtain</button>
+  <button data-tab="domhnach" class="display" onclick="go('domhnach')">Domhnach</button>
+</nav>
+
+<div id="sheethost"></div>
+<div id="modalhost"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* =====================================================
+   AN BAILE
+   Jabanna an tí. Rónán (oráiste) agus Máirín (corcra).
+   Gan fógra ar bith: ar an scáileán a mhaireann gach rud.
+   ===================================================== */
+
+/* ---- FIREBASE CONFIG: cuir do chuid sonraí anseo ---- */
+const firebaseConfig = {
+  apiKey: "AIzaSyBCHbIYZl63VaXavFtu6FixnEjIm7Nt92k",
+  authDomain: "an-baile.firebaseapp.com",
+  projectId: "an-baile",
+  storageBucket: "an-baile.firebasestorage.app",
+  messagingSenderId: "708093775925",
+  appId: "1:708093775925:web:1e4cfe138110dd5a90217c"
+};
+/* ------------------------------------------------------ */
+
+const DAYS = ["Luan","Máirt","Céadaoin","Déardaoin","Aoine","Satharn","Domhnach"];
+const DAYS_SH = ["Lu","Má","Cé","Dé","Ao","Sa","Do"];
+const MONTHS = ["Eanáir","Feabhra","Márta","Aibreán","Bealtaine","Meitheamh","Iúil","Lúnasa","Meán Fómhair","Deireadh Fómhair","Samhain","Nollaig"];
+const NAMES = { R: "Rónán", M: "Máirín" };
+const LS_STATE = "baile-state";
+const LS_WHO = "baile-who";
+
+/* ---------- dátaí ---------- */
+const dayIdx = d => (d.getDay() + 6) % 7;
+function mondayOf(d) { const m = new Date(d); m.setHours(0,0,0,0); m.setDate(m.getDate() - dayIdx(m)); return m; }
+function isoDate(d) { return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function weekLabel(monIso) {
+  const mon = new Date(monIso + "T00:00:00"); const sun = new Date(mon); sun.setDate(sun.getDate()+6);
+  return mon.getDate() + (mon.getMonth()===sun.getMonth() ? "" : " " + MONTHS[mon.getMonth()]) + " go " + sun.getDate() + " " + MONTHS[sun.getMonth()];
+}
+function weeksBetween(aIso, bIso) { return Math.round((new Date(bIso) - new Date(aIso)) / 6048e5); }
+function dateOfDay(weekKey, d) { const m = new Date(weekKey + "T00:00:00"); m.setDate(m.getDate()+d); return isoDate(m); }
+
+/* ---------- síol ---------- */
+function blankDinners() { return DAYS.map(() => ({ meal: "", cook: "M" })); }
+function seedState() {
+  const mon = isoDate(mondayOf(new Date()));
+  return {
+    version: 2,
+    anchor: mon,
+    template: [
+      { id:"cistin",   name:"Cistin",                       owner:"R", cad:"la" },
+      { id:"bruscar",  name:"Bruscar",                      owner:"R", cad:"la" },
+      { id:"eadach",   name:"Éadach",                       owner:"M", cad:"la" },
+      { id:"sui",      name:"Seomra suí",                   owner:"M", cad:"la" },
+      { id:"urlair",   name:"Urláir",                       owner:"R", cad:"dha" },
+      { id:"siopa",    name:"Siopadóireacht na seachtaine", owner:"M", cad:"seachtain", mode:"sceid", day:4, time:"17:30" },
+      { id:"folctha",  name:"Seomraí folctha",              owner:"M", cad:"seachtain", mode:"sceid", day:4, time:"" },
+      { id:"plandai",  name:"Uisce ar na plandaí",          owner:"M", cad:"seachtain", mode:"sceid", day:6, time:"" },
+      { id:"braillini",name:"Athraigh braillíní",           owner:"M", cad:"coicis",    mode:"sceid", day:5, time:"" }
+    ],
+    week: { key: mon, dinners: blankDinners(), checks: {} },
+    events: [],
+    nextDinners: null,
+    mealHist: [],
+    history: []
+  };
+}
+
+/* ---------- instansanna ---------- */
+function fortnightDue(state, weekKey) { return weeksBetween(state.anchor, weekKey) % 2 === 0; }
+
+function instancesFor(state) {
+  const wk = state.week.key;
+  const out = [];
+  for (const t of state.template) {
+    if (t.cad === "la") {
+      for (let d = 0; d < 7; d++) {
+        out.push({ iid: t.id + ":" + d, name: t.name, owner: t.owner, day: d, kind: "la", deadline: d });
+      }
+    } else if (t.cad === "dha") {
+      out.push({ iid: t.id + ":a", name: t.name + " 1", owner: t.owner, day: null, kind: "fuinneog", label: "roimh an gCéadaoin", deadline: 2 });
+      out.push({ iid: t.id + ":b", name: t.name + " 2", owner: t.owner, day: null, kind: "fuinneog", label: "roimh an Domhnach", deadline: 6 });
+    } else if (t.cad === "seachtain" || (t.cad === "coicis" && fortnightDue(state, wk))) {
+      if (t.mode === "fuinneog") {
+        out.push({ iid: t.id + ":w", name: t.name, owner: t.owner, day: null, kind: "fuinneog", label: "roimh an Domhnach", deadline: 6 });
+      } else {
+        out.push({ iid: t.id + ":w", name: t.name, owner: t.owner, day: t.day, kind: "sceid", time: t.time || "", deadline: t.day });
+      }
+    }
+  }
+  for (let d = 0; d < 7; d++) {
+    const din = (state.week.dinners[d] || { meal:"", cook:"M" });
+    const cook = din.cook === "M" ? "M" : din.cook === "R" ? "R" : "";
+    out.push({ iid: "din:" + d, name: "Dinnéar", owner: cook || "R", day: d, kind: "din",
+      deadline: d, meal: din.meal, cookSet: !!cook });
+  }
+  return out;
+}
+
+/* déanta: cuireann tic ainm an té a rinne é */
+function weekStats(state) {
+  const inst = instancesFor(state);
+  const s = { R: { done:0, total:0 }, M: { done:0, total:0 } };
+  for (const i of inst) {
+    s[i.owner].total++;
+    const doer = state.week.checks[i.iid];
+    if (doer === "R" || doer === "M") s[doer].done++;
+  }
+  return s;
+}
+
+/* ---------- rollover ---------- */
+function rollover(state) {
+  let s = state, changed = false;
+  const now = new Date();
+  const nowMon = isoDate(mondayOf(now));
+  if (s.week.key !== nowMon) {
+    const stats = weekStats(s);
+    const history = [{ key: s.week.key, label: weekLabel(s.week.key), R: stats.R, M: stats.M }, ...(s.history||[])].slice(0, 26);
+    let mealHist = s.mealHist || [];
+    for (const d of s.week.dinners) {
+      const m = (d.meal || "").trim();
+      if (m) mealHist = [m, ...mealHist.filter(x => x.toLowerCase() !== m.toLowerCase())];
+    }
+    mealHist = mealHist.slice(0, 30);
+    const dinners = (s.nextDinners && s.nextDinners.length === 7) ? s.nextDinners : blankDinners();
+    s = { ...s, week: { key: nowMon, dinners, checks: {} }, events: [], nextDinners: null, mealHist, history };
+    changed = true;
+  }
+  const today = isoDate(now);
+  const yest = isoDate(new Date(now.getTime() - 864e5));
+  const pruned = (s.events || []).filter(e => e.date === today || e.date === yest);
+  if (pruned.length !== (s.events || []).length) { s = { ...s, events: pruned }; changed = true; }
+  return { state: s, changed };
+}
+
+/* ---------- stát agus sync ---------- */
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+let state = null;
+let who = lsGet(LS_WHO) || null;
+let tab = "baile";
+let planNext = false;
+let fbDoc = null, fbReady = false, applyingRemote = false, saveTimer = null;
+
+const configured = firebaseConfig.apiKey && firebaseConfig.apiKey !== "CUIR_ANSEO";
+
+function loadLocal() {
+  try { const raw = localStorage.getItem(LS_STATE); if (raw) return JSON.parse(raw); } catch (e) {}
+  return null;
+}
+function persist() {
+  lsSet(LS_STATE, JSON.stringify(state));
+  if (fbReady && fbDoc && !applyingRemote) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      fbDoc.set(state).then(() => setSync("on")).catch(() => setSync("err"));
+    }, 350);
+  }
+}
+function setSync(mode) {
+  const el = document.getElementById("sync");
+  el.className = "syncdot " + (mode === "on" ? "on" : mode === "err" ? "err" : "");
+  document.getElementById("synctxt").textContent =
+    mode === "on" ? "sioncronaithe" : mode === "err" ? "fadhb sync" : "áitiúil";
+}
+function retrySync() { if (fbReady && fbDoc) persist(); }
+
+function boot() {
+  state = loadLocal() || seedState();
+  const r = rollover(state); state = r.state;
+  if (r.changed) persist();
+  if (!who) { document.getElementById("firstrun").classList.remove("hidden"); return; }
+  start();
+}
+function setWho(w) {
+  who = w; lsSet(LS_WHO, w);
+  document.getElementById("firstrun").classList.add("hidden");
+  start();
+}
+function start() {
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("tabs").classList.remove("hidden");
+  if (!configured) document.getElementById("banner").classList.remove("hidden");
+  render();
+  if (configured) initFirebase();
+  window.addEventListener("focus", () => {
+    const r = rollover(state);
+    if (r.changed) { state = r.state; persist(); }
+    render();
+  });
+}
+function initFirebase() {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    firebase.auth().signInAnonymously().then(() => {
+      fbDoc = firebase.firestore().collection("teaghlach").doc("baile");
+      fbDoc.onSnapshot(snap => {
+        if (snap.exists) {
+          applyingRemote = true;
+          state = snap.data();
+          if (!state.events) state.events = [];
+          const r = rollover(state);
+          state = r.state;
+          lsSet(LS_STATE, JSON.stringify(state));
+          applyingRemote = false;
+          fbReady = true; setSync("on");
+          if (r.changed) persist();
+          render();
+        } else {
+          fbReady = true; persist(); setSync("on");
+        }
+      }, () => setSync("err"));
+    }).catch(() => setSync("err"));
+  } catch (e) { setSync("err"); }
+}
+
+/* ---------- gníomhartha ---------- */
+function pad2(n) { return String(n).padStart(2, "0"); }
+function nowTime() { const d = new Date(); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
+
+function doTick(iid) {
+  const inst = instancesFor(state).find(i => i.iid === iid);
+  if (!inst) return;
+  if (state.week.checks[iid]) {
+    /* baint an tic: an lá céanna amháin, ag an té a rinne */
+    const ev = (state.events || []).find(e => e.iid === iid);
+    const today = isoDate(new Date());
+    if (ev && ev.date === today && ev.who === who) {
+      askConfirm("An tic a bhaint de " + inst.name + "?", () => {
+        delete state.week.checks[iid];
+        state.events = state.events.filter(e => e.iid !== iid);
+        persist(); render();
+        if (document.getElementById("sheethost").innerHTML) openSheet();
+      });
+    }
+    return;
+  }
+  state.week.checks[iid] = who;
+  state.events = [{ t: Date.now(), time: nowTime(), date: isoDate(new Date()), who, iid,
+    name: inst.name, owner: inst.owner }, ...(state.events || [])];
+  persist(); render();
+}
+function cycleCook(idx, next) {
+  const arr = next ? ensureNext() : state.week.dinners;
+  const c = arr[idx].cook;
+  arr[idx].cook = c === "M" ? "R" : c === "R" ? "" : "M";
+  persist(); render();
+}
+function setMeal(idx, val, next) {
+  const arr = next ? ensureNext() : state.week.dinners;
+  arr[idx].meal = val; persist();
+}
+function ensureNext() {
+  if (!state.nextDinners || state.nextDinners.length !== 7) state.nextDinners = blankDinners();
+  return state.nextDinners;
+}
+function go(t) {
+  tab = t;
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  render();
+}
+function switchWho() {
+  lsDel(LS_WHO); who = null;
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("tabs").classList.add("hidden");
+  document.getElementById("firstrun").classList.remove("hidden");
+}
+function resetAll() {
+  askConfirm("Glanfar gach jab, gach tic agus an stair, don bheirt agaibh.", () => {
+    state = seedState(); persist(); tab = "baile";
+    document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === "baile"));
+    render();
+  });
+}
+function refreshData() {
+  if (fbReady && fbDoc) {
+    fbDoc.get().then(snap => {
+      if (snap.exists) {
+        applyingRemote = true;
+        state = snap.data();
+        if (!state.events) state.events = [];
+        const r = rollover(state); state = r.state;
+        lsSet(LS_STATE, JSON.stringify(state));
+        applyingRemote = false;
+        if (r.changed) persist();
+        setSync("on");
+      }
+      render();
+    }).catch(() => { setSync("err"); render(); });
+  } else {
+    const r = rollover(state); state = r.state;
+    if (r.changed) persist();
+    render();
+  }
+}
+let confirmYes = null;
+function askConfirm(msg, onYes) {
+  confirmYes = () => { closeConfirm(); onYes(); };
+  document.getElementById("modalhost").innerHTML = `
+    <div class="overlay" onclick="if(event.target===this)closeConfirm()">
+      <div class="modal">
+        <h3>An bhfuil tú cinnte?</h3>
+        <p style="font-size:.92rem;margin:0 0 6px">${esc(msg)}</p>
+        <div class="btnrow" style="margin-top:16px">
+          <button class="btn danger" onclick="confirmYes()">Tá, déan é</button>
+          <button class="btn" onclick="closeConfirm()">Cealaigh</button>
+        </div>
+      </div></div>`;
+}
+function closeConfirm() { confirmYes = null; document.getElementById("modalhost").innerHTML = ""; }
+
+/* ---------- rindreáil ---------- */
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function ownName(o) { return NAMES[o] || ""; }
+
+function render() {
+  const now = new Date(); const today = dayIdx(now);
+  document.getElementById("dateline").textContent = DAYS[today] + " · " + now.getDate() + " " + MONTHS[now.getMonth()] + " · " + weekLabel(state.week.key);
+  const v = document.getElementById("view");
+  if (tab === "baile") v.innerHTML = renderBaile(today);
+  if (tab === "seachtain") v.innerHTML = renderSeachtain(today);
+  if (tab === "domhnach") v.innerHTML = renderDomhnach();
+}
+
+/* --- an baile: an sruth --- */
+function renderBaile(today) {
+  const inst = instancesFor(state);
+  const checks = state.week.checks;
+  const todayIso = isoDate(new Date());
+  const yestIso = isoDate(new Date(Date.now() - 864e5));
+
+  /* cuntar an duine fein amhain */
+  const mineToday = inst.filter(i => i.owner === who && i.deadline === today && (i.kind !== "fuinneog"));
+  const leftToday = mineToday.filter(i => !checks[i.iid]).length;
+  const counter = `<button class="counter c${who}" onclick="openSheet()">
+      <span>${ownName(who)}</span><small>${leftToday} fágtha inniu · brúigh le feiceáil</small>
+    </button>`;
+
+  /* ro shonrach: sraith jab */
+  const trow = i => {
+    const done = !!checks[i.iid];
+    let chip = "";
+    if (i.kind === "sceid" && i.time) chip = `<span class="chip">${esc(i.time)}</span>`;
+    return `<button class="task o${i.owner} ${done ? "done" : ""}" onclick="doTick('${i.iid}')">
+      <span class="box">${done ? "✓" : ""}</span>
+      <span class="nm">${esc(i.name)}<small>${ownName(i.owner)}</small></span>${chip}</button>`;
+  };
+
+  /* 1 · Le déanamh inniu: dinnéar anocht + jabanna an lae (gan tic) */
+  const din = inst.find(i => i.kind === "din" && i.day === today);
+  const dinDone = din && checks[din.iid];
+  const dinHTML = din ? `<div class="fdin" style="margin-bottom:6px">
+        <button class="dtick ${dinDone ? "done" : ""}" onclick="doTick('${din.iid}')">${dinDone ? "✓" : ""}</button>
+        <span class="dt"><b>Dinnéar</b><small>${din.meal ? esc(din.meal) : "gan phlean fós"}</small></span>
+        <span class="ck k${din.cookSet ? din.owner : "B"}">${din.cookSet ? ownName(din.owner).toUpperCase() : "RÓNÁN · BEARNA"}</span>
+      </div>` : "";
+  const dueToday = inst.filter(i => (i.kind === "la" || i.kind === "sceid") && i.day === today && !checks[i.iid]);
+  const todaySec = `<div class="sechead">Le déanamh inniu</div>` + dinHTML
+    + (dueToday.map(trow).join("") || (dinDone || !din ? `<div class="fempty">Tada eile inniu. Maith sibh.</div>` : ""));
+
+  /* 2 · Le teacht: fuinneoga oscailte, sceidealta amárach, bearnaí romhainn */
+  const wins = inst.filter(i => i.kind === "fuinneog" && !checks[i.iid] && i.deadline >= today);
+  const winHTML = wins.map(i => `<div class="fcard b${i.owner}" style="margin-bottom:6px"><b>${esc(i.name)}</b> · ${ownName(i.owner)}<small>fuinneog oscailte · ${esc(i.label)}</small>
+        ${i.owner === who ? `<button class="claim o${who}" onclick="doTick('${i.iid}')">Déan anois é ✓</button>` : ""}
+      </div>`).join("");
+  const upTmrw = today < 6 ? inst.filter(i => i.kind === "sceid" && i.day === today + 1) : [];
+  const tmrwHTML = upTmrw.map(i => `<div class="fcard b${i.owner}" style="margin-bottom:6px"><b>${esc(i.name)}</b> · ${ownName(i.owner)}<small>amárach · ${DAYS[i.day]}${i.time ? " " + esc(i.time) : ""}</small></div>`).join("");
+  const gaps = inst.filter(i => i.kind === "din" && i.day > today && !i.cookSet);
+  const gapHTML = gaps.map(i => `<div class="fcard" style="margin-bottom:6px"><b>Dinnéar ${DAYS[i.day]}</b> · bearna${i.meal ? `<small>${esc(i.meal)}</small>` : ""}
+        <button class="claim oG" onclick="claimGap(${i.day})">Glacaim leis</button>
+      </div>`).join("");
+  const comingSec = (winHTML || tmrwHTML || gapHTML)
+    ? `<div class="sechead">Le teacht</div>` + winHTML + tmrwHTML + gapHTML : "";
+
+  /* 3 · Fós le déanamh: sprioc caite. Laethúil agus dinnéar: dhá lá ar a mhéad. */
+  const missed = inst.filter(i => {
+    if (checks[i.iid] || i.deadline >= today) return false;
+    if (i.kind === "la" || i.kind === "din") return i.deadline >= today - 2;
+    return true;
+  });
+  const missHTML = missed.map(i => {
+    const when = i.deadline === today - 1 ? "ó inné" : (i.kind === "fuinneog" ? "thart" : DAYS[i.deadline]);
+    const sub = i.kind === "fuinneog" ? esc(i.label) : (i.kind === "din" && i.meal ? esc(i.meal) : "");
+    const done = false;
+    return `<button class="task o${i.owner}" onclick="doTick('${i.iid}')">
+      <span class="box"></span>
+      <span class="nm">${esc(i.name)}${sub ? `<small>${sub}</small>` : `<small>${ownName(i.owner)}</small>`}</span>
+      <span class="chip warn">${when}</span></button>`;
+  }).join("");
+  const missSec = missHTML ? `<div class="sechead">Fós le déanamh · ó laethanta eile</div>` + missHTML : "";
+
+  /* 4 · An sruth: déanta inniu agus inné */
+  const evHTML = e => {
+    const cross = e.who !== e.owner ? " · jab " + (e.owner === "R" ? "Rónáin" : "Mháirín") : "";
+    const mine = e.who === who && e.date === todayIso;
+    return `<div class="fitem f${e.who}" ${mine ? `onclick="doTick('${e.iid}')" style="cursor:pointer"` : ""}>
+      <b>${ownName(e.who)}</b> ✓ ${esc(e.name)}${cross} <span class="tm">· ${e.time}</span>${mine ? ' <span class="undo">· brúigh le baint</span>' : ""}</div>`;
+  };
+  const evToday = (state.events || []).filter(e => e.date === todayIso);
+  const evYest = (state.events || []).filter(e => e.date === yestIso);
+  const feedSec = (evToday.length || evYest.length)
+    ? `<div class="sechead">An sruth · déanta</div>`
+      + (evToday.length ? `<div class="feed">${evToday.map(evHTML).join("")}</div>` : `<div class="fempty">Tada déanta fós inniu.</div>`)
+      + (evYest.length ? `<div class="sechead">Inné · ${DAYS[(today + 6) % 7]}</div><div class="feed">${evYest.map(evHTML).join("")}</div>` : "")
+    : "";
+
+  return counter + todaySec + comingSec + missSec + feedSec;
+}
+
+
+function claimGap(day) {
+  const arr = state.week.dinners;
+  if (arr[day]) { arr[day].cook = who; persist(); render(); }
+}
+
+/* --- bileog an chuntair --- */
+function openSheet() {
+  const now = new Date(); const today = dayIdx(now);
+  const inst = instancesFor(state);
+  const checks = state.week.checks;
+  const mine = inst.filter(i => i.owner === who);
+  const gToday = mine.filter(i => i.deadline === today && i.kind !== "fuinneog");
+  const gWins = mine.filter(i => i.kind === "fuinneog" && !checks[i.iid]);
+  const gLater = mine.filter(i => i.kind !== "fuinneog" && i.deadline > today && !checks[i.iid]);
+  const rowH = i => {
+    const done = !!checks[i.iid];
+    let chip = "";
+    if (i.kind === "fuinneog") chip = `<span class="chip ${i.deadline < today ? "warn" : ""}">${esc(i.label)}${i.deadline < today ? " · ó inné" : ""}</span>`;
+    else if (i.kind === "sceid" && i.time) chip = `<span class="chip">${esc(i.time)}</span>`;
+    else if (i.deadline !== today) chip = `<span class="chip">${DAYS[i.deadline]}</span>`;
+    const sub = i.kind === "din" ? (i.meal ? esc(i.meal) : "gan phlean fós") : "";
+    return `<button class="task o${i.owner} ${done ? "done" : ""}" onclick="doTick('${i.iid}');openSheet()">
+      <span class="box">${done ? "✓" : ""}</span><span class="nm">${esc(i.name)}${sub ? `<small>${sub}</small>` : ""}</span>${chip}</button>`;
+  };
+  document.getElementById("sheethost").innerHTML = `
+    <div class="overlay" onclick="if(event.target===this)closeSheet()">
+      <div class="sheet">
+        <h3>A bhfuil fágtha · ${ownName(who)}</h3>
+        ${gToday.length ? `<div class="sechead">Inniu</div>` + gToday.map(rowH).join("") : ""}
+        ${gWins.length ? `<div class="sechead">Fuinneoga oscailte</div>` + gWins.map(rowH).join("") : ""}
+        ${gLater.length ? `<div class="sechead">Níos deireanaí sa tseachtain</div>` + gLater.map(rowH).join("") : ""}
+        ${!gToday.length && !gWins.length && !gLater.length ? `<div class="fempty">Tada fágtha. Maith thú.</div>` : ""}
+        <div class="btnrow"><button class="btn" onclick="closeSheet()">Dún</button></div>
+      </div></div>`;
+}
+function closeSheet() { document.getElementById("sheethost").innerHTML = ""; }
+
+/* --- seachtain --- */
+function renderSeachtain(today) {
+  const inst = instancesFor(state);
+  const checks = state.week.checks;
+  let html = "";
+
+  const winsByOwner = { R: inst.filter(i => i.kind === "fuinneog" && i.owner === "R"),
+                        M: inst.filter(i => i.kind === "fuinneog" && i.owner === "M") };
+  for (const o of ["R", "M"]) {
+    if (!winsByOwner[o].length) continue;
+    html += `<div class="daysplit">Fuinneoga ${o === "R" ? "Rónáin" : "Mháirín"}</div>`;
+    html += winsByOwner[o].map(i => {
+      const done = !!checks[i.iid];
+      const doneEv = (state.events || []).find(e => e.iid === i.iid);
+      const late = !done && i.deadline < today;
+      const sub = done ? esc(i.label) + (doneEv ? " · déanta " + DAYS[dayIdx(new Date(doneEv.date + "T12:00:00"))] : "") : esc(i.label);
+      return `<button class="task o${i.owner} ${done ? "done" : ""}" onclick="doTick('${i.iid}')">
+        <span class="box">${done ? "✓" : ""}</span>
+        <span class="nm">${esc(i.name)}<small>${sub}</small></span>
+        ${!done ? `<span class="chip ${late ? "warn" : ""}">${late ? "ó inné" : "oscailte"}</span>` : ""}
+      </button>`;
+    }).join("");
+  }
+
+  for (let d = 0; d < 7; d++) {
+    const rows = inst.filter(i => (i.kind === "la" || i.kind === "sceid" || i.kind === "din") && i.day === d);
+    html += `<div class="daysplit ${d === today ? "today" : ""}">${DAYS[d]}${d === today ? " · inniu" : ""}</div>`;
+    html += rows.map(i => {
+      const done = !!checks[i.iid];
+      if (i.kind === "din") {
+        return `<button class="task o${i.owner} ${done ? "done" : ""}" onclick="doTick('${i.iid}')">
+          <span class="box">${done ? "✓" : ""}</span>
+          <span class="nm">Dinnéar<small>${i.meal ? esc(i.meal) : "gan phlean fós"}</small></span>
+          <span class="chip k${i.cookSet ? i.owner : ""}">${i.cookSet ? ownName(i.owner) : "bearna"}</span>
+        </button>`;
+      }
+      const chip = i.kind === "sceid" && i.time ? `<span class="chip">${esc(i.time)}</span>` : "";
+      return `<button class="task o${i.owner} ${done ? "done" : ""}" onclick="doTick('${i.iid}')">
+        <span class="box">${done ? "✓" : ""}</span><span class="nm">${esc(i.name)}</span>${chip}</button>`;
+    }).join("");
+    /* nóta coicíse ar an lá sceidealta sa tseachtain shaor */
+    for (const t of state.template) {
+      if (t.cad === "coicis" && !fortnightDue(state, state.week.key) && t.day === d) {
+        html += `<div class="offnote">${esc(t.name.toLowerCase())}: an tseachtain seo chugainn</div>`;
+      }
+    }
+  }
+  return html;
+}
+
+/* --- domhnach --- */
+function renderDomhnach() {
+  const last = (state.history || [])[0];
+  const dinners = planNext ? (state.nextDinners || blankDinners()) : state.week.dinners;
+  const meals = state.mealHist || [];
+  const datalist = `<datalist id="meals">${meals.map(m => `<option value="${esc(m)}"></option>`).join("")}</datalist>`;
+
+  const statHTML = last ? `
+    <div class="sechead" style="margin-top:8px">An tseachtain seo caite · ${esc(last.label)}</div>
+    <div class="statrow">
+      <div class="stat sR"><div class="big display">${last.R.total ? Math.round(last.R.done/last.R.total*100) : 0}%</div><p>Rónán · ${last.R.done} as ${last.R.total}</p></div>
+      <div class="stat sM"><div class="big display">${last.M.total ? Math.round(last.M.done/last.M.total*100) : 0}%</div><p>Máirín · ${last.M.done} as ${last.M.total}</p></div>
+    </div>` : `<p class="note">Níl aon tseachtain iomlán caite fós. Tiocfaidh na figiúirí anseo Dé Luain.</p>`;
+
+  const dinHTML = dinners.map((d, idx) => `
+    <div class="dinrow">
+      <span class="dy">${DAYS_SH[idx]}</span>
+      <input list="meals" value="${esc(d.meal)}" placeholder="béile…" onchange="setMeal(${idx}, this.value, ${planNext})">
+      <button class="cookbtn ${d.cook === "M" ? "kM" : d.cook === "R" ? "kR" : ""}" onclick="cycleCook(${idx}, ${planNext})">${d.cook ? ownName(d.cook).toUpperCase() : "bearna"}</button>
+    </div>`).join("");
+
+  const tmplHTML = state.template.map(t => `
+    <div class="temprow">
+      <span class="dot d${t.owner}"></span>
+      <span class="nm">${esc(t.name)}<small>${cadLabel(t)}</small></span>
+      <button class="editbtn" onclick="openEditor('${t.id}')">Athraigh</button>
+    </div>`).join("");
+
+  const stairHTML = (state.history || []).map(h => `
+    <div class="temprow"><span class="nm">${esc(h.label)}<small>Rónán ${h.R.total ? Math.round(h.R.done/h.R.total*100) : 0}% · Máirín ${h.M.total ? Math.round(h.M.done/h.M.total*100) : 0}%</small></span></div>`).join("");
+
+  return `
+    <h2 class="sec display">Athbhreithniú an Domhnaigh</h2>
+    <p class="note">Deich nóiméad, uair sa tseachtain: na figiúirí, na dinnéir, an liosta. Sin é.</p>
+    ${statHTML}
+    <h2 class="sec display">Dinnéir</h2>
+    <div class="wktoggle">
+      <button class="${planNext ? "" : "on"}" onclick="planNext=false;render()">An tseachtain seo</button>
+      <button class="${planNext ? "on" : ""}" onclick="planNext=true;render()">An chéad seachtain eile</button>
+    </div>
+    ${datalist}${dinHTML}
+    <p class="note">Bearna gan líonadh: titeann sí ar Rónán nuair a thagann an lá. Tosaigh ag scríobh i mbosca béile agus tiocfaidh béilí na seachtainí a chuaigh thart aníos mar mholtaí.</p>
+    <h2 class="sec display">Na jabanna</h2>
+    ${tmplHTML}
+    <button class="addbtn" onclick="openEditor(null)">+ Cuir jab leis</button>
+    ${stairHTML ? `<h2 class="sec display">Stair</h2>${stairHTML}` : ""}
+    <h2 class="sec display">Eile</h2>
+    <div class="btnrow">
+      <button class="btn" onclick="refreshData()">Athnuaigh</button>
+      <button class="btn" onclick="switchWho()">Mise: ${ownName(who)} · athraigh</button>
+      <button class="btn danger" onclick="resetAll()">Glan gach rud</button>
+    </div>
+    <p class="note">Feiceann an bheirt agaibh an bord céanna. An t-athrú deireanach a sheasann má athraíonn beirt rud ag an am céanna.</p>`;
+}
+
+function cadLabel(t) {
+  if (t.cad === "la") return "gach lá";
+  if (t.cad === "dha") return "faoi dhó sa tseachtain · roimh Chéadaoin, roimh Dhomhnach";
+  const base = t.cad === "coicis" ? "gach coicís" : "gach seachtain";
+  if (t.mode === "fuinneog") return base + " · fuinneog · roimh an Domhnach";
+  return base + " · " + DAYS[t.day] + (t.time ? " " + t.time : "");
+}
+
+/* --- eagarthóir --- */
+let editForm = null;
+function openEditor(id) {
+  const t = id ? state.template.find(x => x.id === id) : null;
+  editForm = t ? JSON.parse(JSON.stringify(t)) : { id: null, name: "", owner: "R", cad: "la", mode: "sceid", day: 0, time: "" };
+  if (!editForm.mode) editForm.mode = "sceid";
+  if (editForm.day == null) editForm.day = 0;
+  drawEditor();
+}
+function drawEditor() {
+  const f = editForm;
+  const needsMode = f.cad === "seachtain" || f.cad === "coicis";
+  document.getElementById("modalhost").innerHTML = `
+    <div class="overlay" onclick="if(event.target===this)closeEditor()">
+      <div class="modal">
+        <h3>${f.id ? "Athraigh an jab" : "Jab nua"}</h3>
+        <label class="lbl">Ainm</label>
+        <input class="inp" id="f-name" value="${esc(f.name)}" placeholder="m.sh. Cistin">
+        <label class="lbl">Cé leis é</label>
+        <div class="seg">
+          <button class="${f.owner==="R"?"on gR":""}" onclick="edSet('owner','R')">Rónán</button>
+          <button class="${f.owner==="M"?"on gM":""}" onclick="edSet('owner','M')">Máirín</button>
+        </div>
+        <label class="lbl">Cé chomh minic</label>
+        <div class="seg">
+          <button class="${f.cad==="la"?"on":""}" onclick="edSet('cad','la')">Gach lá</button>
+          <button class="${f.cad==="dha"?"on":""}" onclick="edSet('cad','dha')">Faoi dhó sa tseachtain</button>
+          <button class="${f.cad==="seachtain"?"on":""}" onclick="edSet('cad','seachtain')">Gach seachtain</button>
+          <button class="${f.cad==="coicis"?"on":""}" onclick="edSet('cad','coicis')">Gach coicís</button>
+        </div>
+        ${needsMode ? `
+        <label class="lbl">Cén sórt</label>
+        <div class="seg">
+          <button class="${f.mode==="sceid"?"on":""}" onclick="edSet('mode','sceid')">Lá faoi leith</button>
+          <button class="${f.mode==="fuinneog"?"on":""}" onclick="edSet('mode','fuinneog')">Fuinneog · roimh an Domhnach</button>
+        </div>
+        ${f.mode === "sceid" ? `
+          <label class="lbl">Cén lá</label>
+          <select class="inp" id="f-day">${DAYS.map((d,i)=>`<option value="${i}" ${f.day===i?"selected":""}>${d}</option>`).join("")}</select>
+          <label class="lbl">Am (roghnach)</label>
+          <input class="inp" id="f-time" type="time" value="${esc(f.time||"")}">` : ""}` : ""}
+        <div class="btnrow" style="margin-top:20px">
+          <button class="btn primary" onclick="saveEditor()">Sábháil</button>
+          <button class="btn" onclick="closeEditor()">Cealaigh</button>
+          ${f.id ? `<button class="btn danger" onclick="deleteTask('${f.id}')">Scrios</button>` : ""}
+        </div>
+      </div></div>`;
+}
+function edSet(k, v) { syncEd(); editForm[k] = v; drawEditor(); }
+function syncEd() {
+  const n = document.getElementById("f-name"); if (n) editForm.name = n.value;
+  const d = document.getElementById("f-day"); if (d) editForm.day = Number(d.value);
+  const t = document.getElementById("f-time"); if (t) editForm.time = t.value;
+}
+function saveEditor() {
+  syncEd();
+  if (!editForm.name.trim()) return;
+  const f = editForm;
+  const clean = { id: f.id || "t" + Date.now(), name: f.name.trim(), owner: f.owner, cad: f.cad };
+  if (f.cad === "seachtain" || f.cad === "coicis") {
+    clean.mode = f.mode;
+    if (f.mode === "sceid") { clean.day = f.day; clean.time = f.time || ""; }
+  }
+  const ix = state.template.findIndex(x => x.id === clean.id);
+  if (ix >= 0) state.template[ix] = clean; else state.template.push(clean);
+  persist(); closeEditor(); render();
+}
+function deleteTask(id) {
+  state.template = state.template.filter(t => t.id !== id);
+  persist(); closeEditor(); render();
+}
+function closeEditor() { editForm = null; document.getElementById("modalhost").innerHTML = ""; }
+
+boot();
+</script>
+</body>
+</html>
