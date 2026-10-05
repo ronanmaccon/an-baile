@@ -312,7 +312,7 @@ function instancesFor(state) {
   for (const t of state.template) {
     if (t.cad === "la") {
       for (let d = 0; d < 7; d++) {
-        out.push({ iid: t.id + ":" + d, name: t.name, owner: t.owner, day: d, kind: "la", deadline: d });
+        out.push({ iid: t.id + ":" + d, name: t.name, owner: t.owner, day: d, kind: "la", deadline: d, time: t.time || "" });
       }
     } else if (t.cad === "dha") {
       out.push({ iid: t.id + ":a", name: t.name + " 1", owner: t.owner, day: null, kind: "fuinneog", label: "roimh an gCéadaoin", deadline: 2 });
@@ -624,7 +624,7 @@ function renderBaile(today) {
 
   const todayList = inst.filter(i => mine(i) && (i.kind === "la" || i.kind === "sceid") && i.day === today);
   const todaySorted = [...todayList].sort((a, b) => (checks[a.iid] ? 1 : 0) - (checks[b.iid] ? 1 : 0));
-  const todayRows = todaySorted.map(i => trow(i, i.kind === "sceid" && i.time ? `<span class="chip">${esc(i.time)}</span>` : ""));
+  const todayRows = todaySorted.map(i => trow(i, i.time ? `<span class="chip">${esc(i.time)}</span>` : ""));
 
   const todaySec = `<div class="sechead">Le déanamh inniu</div>` + dinHTML
     + overdueRows.join("") + todayRows.join("")
@@ -691,7 +691,7 @@ function openSheet() {
     const done = !!checks[i.iid];
     let chip = "";
     if (i.kind === "fuinneog") chip = `<span class="chip ${i.deadline < today ? "warn" : ""}">${esc(i.label)}${i.deadline < today ? " · ó inné" : ""}</span>`;
-    else if (i.kind === "sceid" && i.time) chip = `<span class="chip">${esc(i.time)}</span>`;
+    else if (i.time) chip = `<span class="chip">${esc(i.time)}</span>`;
     else if (i.deadline !== today) chip = `<span class="chip">${DAYS[i.deadline]}</span>`;
     const sub = i.kind === "din" ? (i.meal ? esc(i.meal) : "gan phlean fós") : "";
     return `<button class="task o${i.owner} ${done ? "done" : ""}" onclick="doTick('${i.iid}');openSheet()">
@@ -785,7 +785,7 @@ function renderSeachtain(today) {
           <span class="chip k${i.cookSet ? i.owner : ""}">${i.cookSet ? ownName(i.owner) : "bearna"}</span>
         </button>`;
       }
-      const chip = i.kind === "sceid" && i.time ? `<span class="chip">${esc(i.time)}</span>` : "";
+      const chip = i.time ? `<span class="chip">${esc(i.time)}</span>` : "";
       return `<button class="task o${i.owner} ${done ? "done" : ""}" onclick="doTick('${i.iid}')">
         <span class="box">${done ? "✓" : ""}</span><span class="nm">${esc(i.name)}</span>${chip}</button>`;
     }).join("");
@@ -847,6 +847,8 @@ function renderDomhnach() {
     ${tmplHTML}
     <button class="addbtn" onclick="openEditor(null)">+ Cuir jab leis</button>
     ${stairHTML ? `<h2 class="sec display">Stair</h2>${stairHTML}` : ""}
+    <h2 class="sec display">Meabhrúcháin</h2>
+    ${calSection()}
     <h2 class="sec display">Eile</h2>
     <div class="btnrow">
       <button class="btn" onclick="refreshData()">Athnuaigh</button>
@@ -856,8 +858,63 @@ function renderDomhnach() {
     <p class="note">Feiceann an bheirt agaibh an bord céanna. An t-athrú deireanach a sheasann má athraíonn beirt rud ag an am céanna.</p>`;
 }
 
+/* --- easpórtáil féilire: jabanna le ham, don té ar a fhón amháin --- */
+const BYDAY = ["MO","TU","WE","TH","FR","SA","SU"];
+function calTasks() {
+  return state.template.filter(t => t.owner === who && t.time &&
+    (t.cad === "la" || ((t.cad === "seachtain" || t.cad === "coicis") && t.mode === "sceid")));
+}
+function calSection() {
+  const ts = calTasks();
+  if (!ts.length) return `<p class="note">Níl aon jab le ham agat. Cuir am le jab trí Athraigh agus tiocfaidh sé anseo.</p>`;
+  return `<p class="note">Cuirfidh sé seo ${ts.length} ${ts.length === 1 ? "jab" : "jab"} le ham isteach i bhFéilire an fhóin, le rabhadh ag an am sin: ${ts.map(t => esc(t.name)).join(", ")}.</p>
+    <div class="btnrow"><button class="btn primary" onclick="exportCal()">Cuir le Féilire</button></div>
+    <p class="note">Má athraíonn tú am nó jab, scrios an féilire An Baile i bhFéilire an iPhone agus brúigh an cnaipe arís.</p>`;
+}
+function icsEsc(x) { return String(x).replace(/\\/g, "\\\\").replace(/[,;]/g, m => "\\" + m).replace(/\n/g, "\\n"); }
+function icsDate(d, hhmm) {
+  const [h, m] = hhmm.split(":");
+  return d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0") + "T" + h.padStart(2,"0") + m.padStart(2,"0") + "00";
+}
+function buildICS() {
+  const now = new Date();
+  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const mon = mondayOf(now);
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//An Baile//GA", "CALSCALE:GREGORIAN", "X-WR-CALNAME:An Baile"];
+  for (const t of calTasks()) {
+    let start, rule;
+    if (t.cad === "la") {
+      start = new Date(now); start.setHours(0,0,0,0);
+      rule = "FREQ=DAILY";
+    } else {
+      start = new Date(mon); start.setDate(start.getDate() + t.day);
+      if (t.cad === "coicis" && !fortnightDue(state, isoDate(mon))) start.setDate(start.getDate() + 7);
+      rule = "FREQ=WEEKLY;" + (t.cad === "coicis" ? "INTERVAL=2;" : "") + "BYDAY=" + BYDAY[t.day];
+    }
+    lines.push("BEGIN:VEVENT",
+      "UID:anbaile-" + t.id + "@ronanmaccon.github.io",
+      "DTSTAMP:" + stamp,
+      "DTSTART:" + icsDate(start, t.time),
+      "DURATION:PT15M",
+      "RRULE:" + rule,
+      "SUMMARY:" + icsEsc(t.name),
+      "DESCRIPTION:An Baile",
+      "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc(t.name), "TRIGGER:-PT0M", "END:VALARM",
+      "END:VEVENT");
+  }
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n") + "\r\n";
+}
+function exportCal() {
+  if (!calTasks().length) return;
+  const blob = new Blob([buildICS()], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  window.location.href = url;
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
 function cadLabel(t) {
-  if (t.cad === "la") return "gach lá";
+  if (t.cad === "la") return "gach lá" + (t.time ? " · " + t.time : "");
   if (t.cad === "dha") return "faoi dhó sa tseachtain · roimh Chéadaoin, roimh Dhomhnach";
   if (t.cad === "tri") return "trí huaire sa tseachtain · roimh Chéadaoin, roimh Aoine, roimh Dhomhnach";
   const base = t.cad === "coicis" ? "gach coicís" : "gach seachtain";
@@ -896,6 +953,9 @@ function drawEditor() {
           <button class="${f.cad==="seachtain"?"on":""}" onclick="edSet('cad','seachtain')">Gach seachtain</button>
           <button class="${f.cad==="coicis"?"on":""}" onclick="edSet('cad','coicis')">Gach coicís</button>
         </div>
+        ${f.cad === "la" ? `
+          <label class="lbl">Am (roghnach)</label>
+          <input class="inp" id="f-time" type="time" value="${esc(f.time||"")}">` : ""}
         ${needsMode ? `
         <label class="lbl">Cén sórt</label>
         <div class="seg">
@@ -925,6 +985,7 @@ function saveEditor() {
   if (!editForm.name.trim()) return;
   const f = editForm;
   const clean = { id: f.id || "t" + Date.now(), name: f.name.trim(), owner: f.owner, cad: f.cad };
+  if (f.cad === "la" && f.time) clean.time = f.time;
   if (f.cad === "seachtain" || f.cad === "coicis") {
     clean.mode = f.mode;
     if (f.mode === "sceid") { clean.day = f.day; clean.time = f.time || ""; }
